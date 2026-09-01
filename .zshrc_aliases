@@ -1,0 +1,70 @@
+
+
+alias install='sudo xbps-install -Sy'
+alias update="sudo xbps-install -Su"
+alias grub-update="sudo grub-mkconfig -o /boot/grub/grub.cfg"
+alias music="ncmpcpp"
+alias cat="bat --theme=base16"
+alias ls='eza --icons=always --color=always -a'
+alias ll='eza --icons=always --color=always -la'
+alias bateria='acpi -b'
+alias tree='eza --tree --icons=always --color=always --group-directories-first'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Uses xclip to interact with the system clipboard (copy and paste modes)
+cc() {
+  # Case 1: Interactive copy mode (called with file argument)
+  # Example: cc file.txt
+  if [ $# -gt 0 ]; then
+    if [ ! -f "$1" ]; then
+      print -P "%F{red}Error:%f Target file '$1' not found." >&2
+      return 1
+    fi
+
+    if [ ! -r "$1" ]; then
+      print -P "%F{red}Error:%f Insufficient permissions to read '$1'." >&2
+      return 1
+    fi
+
+    if xclip -selection clipboard -in < "$1"; then
+      print -P "%F{green}✓%f Copied '%F{cyan}$1%f' to clipboard." >&2
+      return 0
+    else
+      print -P "%F{red}Error:%f xclip failed to copy file." >&2
+      return 1
+    fi
+  fi
+
+  # Case 2: Piped copy mode (called via stdin stream)
+  # Example: echo "hello" | cc  or  cc < code.c
+  if [ ! -t 0 ]; then
+    if xclip -selection clipboard -in; then
+      print -P "%F{green}✓%f Copied stdin to clipboard." >&2
+      return 0
+    else
+      print -P "%F{red}Error:%f xclip failed to process stdin stream." >&2
+      return 1
+    fi
+  fi
+
+  # Case 3: Paste mode (no arguments, interactive stdin)
+  # Example: cc > output.txt  or  cc | grep "keyword"  or just  cc
+  xclip -selection clipboard -out
+}
