@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Enable error logging
+_LOG_DIR="$HOME/.config/bspwm/logs"
+[ -d "$_LOG_DIR" ] || mkdir -p "$_LOG_DIR"
+exec 2>>"$_LOG_DIR/$(basename "$0").log"
+
+
+sleep 0.3
+color=$(xcolor -S 10 -P 150)
+image=/tmp/${color}.webp
+
+if [ "$color" ]; then
+	echo $color | tr -d "\n" | xclip -selection clipboard
+	magick -size 90x90 xc:"$color" ${image}
+	dunstify -h string:x-dunst-stack-tag:picker -i ${image} "Color Picker" "$color copied to clipboard"
+fi
+exit

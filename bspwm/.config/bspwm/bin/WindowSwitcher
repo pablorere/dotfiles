@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+# Enable error logging
+_LOG_DIR="$HOME/.config/bspwm/logs"
+[ -d "$_LOG_DIR" ] || mkdir -p "$_LOG_DIR"
+exec 2>>"$_LOG_DIR/$(basename "$0").log"
+
+# =============================================================
+# Script Name: WindowSwitcher
+# Description: Alt+Tab window switcher for BSPWM that excludes
+#              scratchpads and hidden windows. Exits immediately
+#              if there are no other tabs to switch to (<= 1 window).
+# =============================================================
+
+# Clean up any stuck/previous rofi process
+if pgrep -x rofi >/dev/null 2>&1; then
+    pkill -9 -x rofi 2>/dev/null
+    rm -f /run/user/1000/rofi* /tmp/rofi* 2>/dev/null
+    sleep 0.05
+fi
+
+THEME="$HOME/.config/bspwm/config/rofi-themes/Windows.rasi"
+
+# Get windows in stacking order (bottom to top), reverse so topmost (most recently focused) is first
+stacking_wids=$(xprop -root _NET_CLIENT_LIST_STACKING 2>/dev/null | tr ',' '\n' | sed -n 's/.*0x/0x/p' | tac)
+
+# Fallback if _NET_CLIENT_LIST_STACKING is empty
+if [ -z "$stacking_wids" ]; then
+    stacking_wids=$(bspc query -N -n .window 2>/dev/null)
+fi
+
+valid_wids=()
+entries=""
+
+for wid in $stacking_wids; do
+    # Check if window still exists
+    xprop -id "$wid" WM_CLASS >/dev/null 2>&1 || continue
+
+    wm_class_raw=$(xprop -id "$wid" WM_CLASS 2>/dev/null)
+    instance=$(echo "$wm_class_raw" | awk -F '"' '{print $2}')
+    class=$(echo "$wm_class_raw" | awk -F '"' '{print $4}')
+
+    # Exclude scratchpad windows
+    if [ "$instance" = "bspwm-scratch" ] || [ "$class" = "bspwm-scratch" ]; then
+        continue
+    fi
+
+    # Exclude hidden windows (e.g. minimized)
+    is_hidden=$(bspc query -T -n "$wid" 2>/dev/null | jq -r '.hidden')
+    if [ "$is_hidden" = "true" ]; then
+        continue
+    fi
+
+    # Exclude windows with SKIP_TASKBAR or SKIP_PAGER
+    wm_state=$(xprop -id "$wid" _NET_WM_STATE 2>/dev/null)
+    if echo "$wm_state" | grep -qE "_NET_WM_STATE_SKIP_TASKBAR|_NET_WM_STATE_SKIP_PAGER"; then
+        continue
+    fi
+
+    desktop=$(bspc query -D -n "$wid" --names 2>/dev/null)
+    [ -z "$desktop" ] && desktop="1"
+
+    title=$(xprop -id "$wid" _NET_WM_NAME 2>/dev/null | sed -n 's/.*= "\(.*\)"/\1/p')
+    [ -z "$title" ] && title=$(xprop -id "$wid" WM_NAME 2>/dev/null | sed -n 's/.*= "\(.*\)"/\1/p')
+    [ -z "$title" ] && title="${class:-$instance}"
+    [ -z "$title" ] && title="Window"
+
+    # Sanitize title (remove newlines/tabs)
+    title=$(echo "$title" | tr '\n\r\t' '   ')
+
+    icon="${class:-$instance}"
+    [ -z "$icon" ] && icon="application-x-executable"
+
+    valid_wids+=("$wid")
+    entries="${entries}${desktop} ${title}\0icon\x1f${icon}\n"
+done
+
+# If there is no tab / other window to switch to (<= 1 window), don't open
+if [ ${#valid_wids[@]} -le 1 ]; then
+    exit 0
+fi
+
+# Preselect the previous window (index 1)
+selected_row=1
+
+selected_index=$(printf "%b" "$entries" | rofi \
+    -dmenu \
+    -theme "$THEME" \
+    -show-icons \
+    -format "i" \
+    -selected-row "$selected_row" \
+    -kb-cancel "Escape,Alt+Escape" \
+    -kb-accept-entry "!Alt_L,!Alt_R,Return" \
+    -kb-element-next "Alt+Tab,Tab" \
+    -kb-element-prev "Alt+ISO_Left_Tab,ISO_Left_Tab")
+
+[ -z "$selected_index" ] && exit 0
+
+target_wid="${valid_wids[$selected_index]}"
+
+if [ -n "$target_wid" ]; then
+    bspc node "$target_wid" -f
+fi

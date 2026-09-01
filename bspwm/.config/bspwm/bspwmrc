@@ -1,0 +1,125 @@
+#!/bin/sh
+# =============================================================
+#  ██████╗ ███████╗██████╗ ██╗    ██╗███╗   ███╗██████╗  ██████╗
+#  ██╔══██╗██╔════╝██╔══██╗██║    ██║████╗ ████║██╔══██╗██╔════╝
+#  ██████╔╝███████╗██████╔╝██║ █╗ ██║██╔████╔██║██████╔╝██║
+#  ██╔══██╗╚════██║██╔═══╝ ██║███╗██║██║╚██╔╝██║██╔══██╗██║
+#  ██████╔╝███████║██║     ╚███╔███╔╝██║ ╚═╝ ██║██║  ██║╚██████╗
+#  ╚═════╝ ╚══════╝╚═╝      ╚══╝╚══╝ ╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝
+# Author:  gh0stzk
+# Repo:    https://github.com/gh0stzk/dotfiles
+# Date:    24.04.2025 20:37:31
+# Copyright (C) 2021-2026 gh0stzk <z0mbi3.zk@protonmail.com>
+# =============================================================
+
+# Enable error logging
+_LOG_DIR="$HOME/.config/bspwm/logs"
+[ -d "$_LOG_DIR" ] || mkdir -p "$_LOG_DIR"
+exec 2>>"$_LOG_DIR/bspwmrc.log"
+
+# Set environment variables
+export PATH="$HOME/.local/bin:$HOME/.config/bspwm/bin:$PATH"
+export XDG_CURRENT_DESKTOP='bspwm'
+## Fix java applications
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+#  ╦ ╦╔═╗╦═╗╦╔═╔═╗╔═╗╔═╗╔═╗╔═╗╔═╗
+#  ║║║║ ║╠╦╝╠╩╗╚═╗╠═╝╠═╣║  ║╣ ╚═╗
+#  ╚╩╝╚═╝╩╚═╩ ╩╚═╝╩  ╩ ╩╚═╝╚═╝╚═╝
+
+bspc config remove_disabled_monitors true
+bspc config remove_unplugged_monitors true
+bspc config merge_overlapping_monitors true
+MonitorSetup
+
+#  ╔╗ ╔═╗╔═╗╦ ╦╔╦╗  ╔═╗╔═╗╔╗╔╔═╗╦╔═╗
+#  ╠╩╗╚═╗╠═╝║║║║║║  ║  ║ ║║║║╠╣ ║║ ╦
+#  ╚═╝╚═╝╩  ╚╩╝╩ ╩  ╚═╝╚═╝╝╚╝╚  ╩╚═╝
+
+bspc config external_rules_command "${HOME}"/.config/bspwm/bin/ExternalRules
+
+bspc config window_gap 3
+bspc config split_ratio               0.51
+bspc config single_monocle            true
+
+bspc config automatic_scheme          longest_side
+bspc config initial_polarity          second_child
+bspc config removal_adjustment        true
+
+# Set fast keyboard repeat rate
+xset r rate 250 50
+
+bspc config focus_follows_pointer     true
+bspc config pointer_follows_focus     false
+bspc config pointer_follows_monitor   true
+bspc config pointer_motion_interval   0
+bspc config pointer_modifier          mod4
+bspc config pointer_action1           move
+bspc config pointer_action2           resize_side
+bspc config pointer_action3           resize_corner
+
+#  ╔═╗╦ ╦╔╦╗╔═╗╔═╗╔╦╗╔═╗╦═╗╔╦╗
+#  ╠═╣║ ║ ║ ║ ║╚═╗ ║ ╠═╣╠╦╝ ║
+#  ╩ ╩╚═╝ ╩ ╚═╝╚═╝ ╩ ╩ ╩╩╚═ ╩
+
+run() {
+  if ! pgrep -fx "$*" >/dev/null 2>&1; then
+    "$@" &
+  fi
+}
+
+# Ensure live DBUS session bus
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] || ! dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames >/dev/null 2>&1; then
+    rm -f "$HOME/.dbus/session-bus/*"
+    if command -v dbus-launch >/dev/null 2>&1; then
+        eval "$(dbus-launch --sh-syntax --exit-with-session)"
+    fi
+fi
+
+# Set system vars for polybar
+"$HOME"/.config/bspwm/bin/SetSysVars
+
+# Start Audio Server (Pipewire)
+pkill -x pipewire; pkill -f pipewire-pulse; pkill -f wireplumber; sleep 1
+pipewire &
+
+# Reload or launch sxhkd daemon
+if pidof -q sxhkd; then
+    pkill -USR1 -x sxhkd
+else
+    sxhkd -c "${HOME}"/.config/bspwm/config/sxhkdrc &
+fi
+
+# Load current theme
+"${HOME}"/.config/bspwm/bin/Theme.sh
+
+# Launch picom
+run picom --config "${HOME}"/.config/bspwm/config/picom/picom.conf
+
+# Launch xsettingsd
+run xsettingsd --config="${HOME}"/.config/bspwm/config/xsettingsd >/dev/null 2>&1
+
+# Launch eww daemon
+pidof -q eww || { eww -c "${HOME}"/.config/bspwm/eww daemon & }
+
+# Launch mpd daemon
+run mpd
+
+# Launch clipboard daemon
+run clipcatd
+
+# Launch polkit authentication agent
+if [ -x /usr/libexec/xfce-polkit ]; then
+    run /usr/libexec/xfce-polkit
+elif command -v lxpolkit >/dev/null 2>&1; then
+    run lxpolkit
+fi
+
+# Launch syndaemon for touchpad disable-while-typing (1 second timeout)
+run syndaemon -i 1.0 -d
+
+# Launch touchpad gestures daemon (3-finger swipe workspaces)
+run touchpad-gestures
+
+# Start one time message
+[ ! -f "$HOME/.config/bspwm/config/.first_run_done" ] && eww -c ${HOME}/.config/bspwm/eww open --toggle welcome && touch "$HOME/.config/bspwm/config/.first_run_done"

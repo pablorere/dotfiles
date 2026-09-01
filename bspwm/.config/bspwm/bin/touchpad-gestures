@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import threading
+import time
+from datetime import datetime
+
+# Enable error and debug logging
+_LOG_DIR = os.path.expanduser("~/.config/bspwm/logs")
+os.makedirs(_LOG_DIR, exist_ok=True)
+_log_file = open(os.path.join(_LOG_DIR, "touchpad-gestures.log"), "a", buffering=1)
+sys.stderr = _log_file
+sys.stdout = _log_file
+
+def log(msg):
+    now = datetime.now().strftime("%H:%M:%S")
+    print(f"[{now}] {msg}", file=_log_file, flush=True)
+
+ENV = os.environ.copy()
+if "DISPLAY" not in ENV:
+    ENV["DISPLAY"] = ":0"
+if "XAUTHORITY" not in ENV and os.path.exists(os.path.expanduser("~/.Xauthority")):
+    ENV["XAUTHORITY"] = os.path.expanduser("~/.Xauthority")
+
+MINIMIZED_STATE = {}
+
+def is_scratchpad(wid):
+    res = subprocess.run(["xprop", "-id", wid, "WM_CLASS"], capture_output=True, text=True, env=ENV)
+    return "bspwm-scratch" in res.stdout
+
+def open_workspace_overview():
+    log("Triggered: 3-finger Swipe UP -> WorkspaceOverview")
+    script_path = os.path.expanduser("~/.config/bspwm/bin/WorkspaceOverview")
+    subprocess.Popen([script_path], env=ENV)
+
+def minimize_all_nodes():
+    log("Triggered: 3-finger Swipe DOWN -> Minimize / Toggle Desktop")
+    if subprocess.run(["pgrep", "-x", "rofi"], capture_output=True, env=ENV).returncode == 0:
+        subprocess.run(["pkill", "-9", "-x", "rofi"], env=ENV)
+        return
+
+    current_desktop = subprocess.run(
+        ["bspc", "query", "-D", "-d", "focused", "--names"],
+        capture_output=True,
+        text=True,
+        env=ENV
+    ).stdout.strip()
+
+    # If we have stored minimized windows for this desktop, restore ONLY those
+    if current_desktop in MINIMIZED_STATE and MINIMIZED_STATE[current_desktop]:
+        for wid in MINIMIZED_STATE[current_desktop]:
+            if not is_scratchpad(wid):
+                subprocess.run(["bspc", "node", wid, "-g", "hidden=off"], env=ENV)
+        MINIMIZED_STATE[current_desktop] = []
+        return
+
+    # Otherwise, minimize all currently visible regular windows on this desktop (exclude scratchpad)
+    res = subprocess.run(
+        ["bspc", "query", "-N", "-d", "-n", ".window.!hidden.!sticky"],
+        capture_output=True,
+        text=True,
+        env=ENV
+    )
+    visible = [w for w in res.stdout.strip().split() if w and not is_scratchpad(w)]
+    if visible:
+        for wid in visible:
+            subprocess.run(["bspc", "node", wid, "-g", "hidden=on"], env=ENV)
+        MINIMIZED_STATE[current_desktop] = visible
+
+def restore_desktop_nodes(desktop_ref):
+    # Restore all non-scratchpad hidden windows on the newly focused desktop
+    res = subprocess.run(
+        ["bspc", "query", "-N", "-d", desktop_ref, "-n", ".window.hidden.!sticky"],
+        capture_output=True,
+        text=True,
+        env=ENV
+    )
+    hidden = [w for w in res.stdout.strip().split() if w and not is_scratchpad(w)]
+    if hidden:
+        log(f"Auto-unhiding {len(hidden)} windows on workspace {desktop_ref}")
+        for wid in hidden:
+            subprocess.run(["bspc", "node", wid, "-g", "hidden=off"], env=ENV)
+    # Clear stored minimized state for this desktop
+    desktop_name = subprocess.run(
+        ["bspc", "query", "-D", "-d", desktop_ref, "--names"],
+        capture_output=True,
+        text=True,
+        env=ENV
+    ).stdout.strip()
+    if desktop_name in MINIMIZED_STATE:
+        MINIMIZED_STATE[desktop_name] = []
+
+def desktop_focus_listener():
+    log("Starting desktop_focus subscriber thread...")
+    while True:
+        try:
+            proc = subprocess.Popen(
+                ["bspc", "subscribe", "desktop_focus"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1,
+                env=ENV
+            )
+            for line in proc.stdout:
+                parts = line.strip().split()
+                if len(parts) >= 3 and parts[0] == "desktop_focus":
+                    desktop_id = parts[2]
+                    restore_desktop_nodes(desktop_id)
+        except Exception as e:
+            log(f"desktop_focus listener error: {e}")
+        time.sleep(2)
+
+def switch_workspace(direction):
+    log(f"Triggered: 3-finger Swipe {direction.upper()} -> bspc desktop -f {direction}")
+    subprocess.run(["pkill", "-9", "-x", "rofi"], env=ENV)
+    subprocess.run(["bspc", "desktop", "-f", direction], env=ENV)
+
+def run_gestures():
+    cmd = ["libinput", "debug-events"]
+    log("Starting libinput debug-events listener...")
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            env=ENV
+        )
+    except Exception as e:
+        log(f"Error starting libinput: {e}")
+        return
+
+    total_dx = 0.0
+    total_dy = 0.0
+    active_fingers = 0
+    triggered = False
+    THRESHOLD = 15.0  # Responsive threshold
+
+    for line in proc.stdout:
+        if "GESTURE_SWIPE_BEGIN" in line:
+            total_dx = 0.0
+            total_dy = 0.0
+            triggered = False
+            parts = line.split()
+            try:
+                active_fingers = int(parts[-1])
+            except (ValueError, IndexError):
+                active_fingers = 3
+
+        elif "GESTURE_SWIPE_UPDATE" in line and active_fingers == 3:
+            parts = line.split()
+            try:
+                for p in parts:
+                    if '/' in p and not p.startswith('('):
+                        dx_str, dy_str = p.split('/')
+                        total_dx += float(dx_str)
+                        total_dy += float(dy_str)
+                        break
+            except Exception:
+                continue
+
+            if not triggered:
+                # Check which axis has crossed the threshold
+                if abs(total_dy) >= THRESHOLD and abs(total_dy) >= abs(total_dx):
+                    if total_dy < 0:
+                        open_workspace_overview()
+                    else:
+                        minimize_all_nodes()
+                    triggered = True
+                elif abs(total_dx) >= THRESHOLD and abs(total_dx) > abs(total_dy):
+                    if total_dx < 0:
+                        switch_workspace("next")
+                    else:
+                        switch_workspace("prev")
+                    triggered = True
+
+        elif "GESTURE_SWIPE_END" in line:
+            active_fingers = 0
+            triggered = False
+
+if __name__ == "__main__":
+    log("Touchpad gestures service initialized.")
+    # Start the desktop focus listener in a background thread
+    focus_thread = threading.Thread(target=desktop_focus_listener, daemon=True)
+    focus_thread.start()
+
+    while True:
+        try:
+            run_gestures()
+        except Exception as e:
+            log(f"Gestures crashed: {e}")
+        time.sleep(2)

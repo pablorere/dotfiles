@@ -26,8 +26,6 @@ alias tree='eza --tree --icons=always --color=always --group-directories-first'
 
 
 
-
-
 # Uses xclip to interact with the system clipboard (copy and paste modes)
 cc() {
   # Case 1: Interactive copy mode (called with file argument)

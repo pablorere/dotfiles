@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+# Enable error logging
+_LOG_DIR="$HOME/.config/bspwm/logs"
+[ -d "$_LOG_DIR" ] || mkdir -p "$_LOG_DIR"
+exec 2>>"$_LOG_DIR/$(basename "$0").log"
+
+# Clean up any stuck/previous rofi process
+if pgrep -x rofi >/dev/null 2>&1; then
+    pkill -9 -x rofi 2>/dev/null
+    rm -f /run/user/1000/rofi* /tmp/rofi* 2>/dev/null
+    sleep 0.05
+fi
+
+THEME="$HOME/.config/bspwm/config/rofi-themes/Workspaces.rasi"
+CURRENT_DESKTOP=$(bspc query -D -d focused --names 2>/dev/null)
+
+desktops=()
+entries=""
+selected_index=0
+index=0
+
+for d in $(bspc query -D --names 2>/dev/null); do
+    desktops+=("$d")
+    windows=$(bspc query -N -d "$d" -n .window 2>/dev/null)
+    win_count=0
+    win_names=()
+    primary_icon=""
+
+    if [ -n "$windows" ]; then
+        for wid in $windows; do
+            wm_class_raw=$(xprop -id "$wid" WM_CLASS 2>/dev/null)
+            instance=$(echo "$wm_class_raw" | awk -F '"' '{print $2}')
+            class=$(echo "$wm_class_raw" | awk -F '"' '{print $4}')
+
+            # Exclude scratchpad and eww widgets
+            if [ "$instance" = "bspwm-scratch" ] || [ "$class" = "bspwm-scratch" ] || [ "$class" = "Eww" ] || [ "$class" = "eww" ]; then
+                continue
+            fi
+
+            # Exclude hidden windows
+            is_hidden=$(bspc query -T -n "$wid" 2>/dev/null | jq -r '.hidden')
+            if [ "$is_hidden" = "true" ]; then
+                continue
+            fi
+
+            win_count=$((win_count + 1))
+            name=$(xprop -id "$wid" _NET_WM_NAME 2>/dev/null | sed -n 's/.*= "\(.*\)"/\1/p')
+            [ -z "$name" ] && name=$(xprop -id "$wid" WM_NAME 2>/dev/null | sed -n 's/.*= "\(.*\)"/\1/p')
+            [ -z "$name" ] && name="${class:-$instance}"
+            [ -z "$name" ] && name="Window"
+
+            # Clean and shorten name
+            name=$(echo "$name" | tr '\n\r\t' '   ' | sed 's/  */ /g')
+            if [ ${#name} -gt 18 ]; then
+                name="$(echo "$name" | cut -c 1-15)..."
+            fi
+            win_names+=("$name")
+
+            if [ -z "$primary_icon" ]; then
+                primary_icon="${class:-$instance}"
+            fi
+        done
+    fi
+
+    # Determine status badge and icon
+    if [ "$d" = "$CURRENT_DESKTOP" ]; then
+        status="<span foreground='#90ceaa'><b>● ACTIVE</b></span>"
+        selected_index=$index
+        [ -z "$primary_icon" ] && primary_icon="user-desktop"
+    elif [ "$win_count" -gt 0 ]; then
+        status="<span foreground='#c296eb'><b>● $win_count window$([ "$win_count" -gt 1 ] && echo 's')</b></span>"
+        [ -z "$primary_icon" ] && primary_icon="user-desktop"
+    else
+        status="<span foreground='#5a657d'>○ Empty</span>"
+        primary_icon="desktop"
+    fi
+
+    if [ "$win_count" -gt 0 ]; then
+        app_list=$(IFS=', '; echo "${win_names[*]}")
+        if [ ${#app_list} -gt 28 ]; then
+            app_list="$(echo "$app_list" | cut -c 1-25)..."
+        fi
+        details="<span size='small' foreground='#a5b6cf'>$app_list</span>"
+    else
+        details="<span size='small' foreground='#5a657d'>No active windows</span>"
+    fi
+
+    entry="<b><big>Workspace $d</big></b>\n$status\n$details\0icon\x1f${primary_icon}\n"
+    entries="${entries}${entry}"
+    index=$((index + 1))
+done
+
+selected_idx=$(printf "%b" "$entries" | rofi -dmenu \
+    -theme "$THEME" \
+    -markup-rows \
+    -format "i" \
+    -show-icons \
+    -p "󱂬  Workspaces Overview" \
+    -selected-row "$selected_index")
+
+[ -z "$selected_idx" ] && exit 0
+
+chosen_ws="${desktops[$selected_idx]}"
+[ -n "$chosen_ws" ] && bspc desktop -f "$chosen_ws"
