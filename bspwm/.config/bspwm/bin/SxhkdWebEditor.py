@@ -6,7 +6,8 @@ import os
 import subprocess
 
 PORT = 8080
-SXHKDRC_PATH = os.path.expanduser("~/.config/bspwm/config/sxhkdrc")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SXHKDRC_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "../../config/sxhkdrc"))
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>

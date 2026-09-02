@@ -2,7 +2,8 @@
 
 # Port to run the editor on
 PORT=8080
-EDITOR_SCRIPT="$HOME/.config/bspwm/bin/SxhkdWebEditor.py"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EDITOR_SCRIPT="$DIR/SxhkdWebEditor.py"
 
 # Check if it's already running and kill it so we don't get 'address already in use'
 pkill -f "SxhkdWebEditor.py"
