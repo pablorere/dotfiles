@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Port to run the editor on
+PORT=8080
+EDITOR_SCRIPT="$HOME/.config/bspwm/bin/SxhkdWebEditor.py"
+
+# Check if it's already running and kill it so we don't get 'address already in use'
+pkill -f "SxhkdWebEditor.py"
+
+# Start the web server in the background
+python3 "$EDITOR_SCRIPT" &
+SERVER_PID=$!
+
+# Give it a second to start
+sleep 1
+
+# Open the browser to the local editor
+if command -v xdg-open >/dev/null; then
+    xdg-open "http://localhost:$PORT"
+elif command -v firefox >/dev/null; then
+    firefox "http://localhost:$PORT"
+else
+    echo "Please open http://localhost:$PORT in your browser."
+fi
