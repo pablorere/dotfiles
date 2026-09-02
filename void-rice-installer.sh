@@ -17,7 +17,7 @@ case "$yn" in [Yy]*);; *) echo "Cancelled."; exit 0;; esac
 
 logo "Installing Void Dependencies"
 # Selected by user + critical Xorg dependencies + recommended silent helpers
-void_deps="bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xinit xsetroot dunst maim pamixer playerctl papirus-icon-theme brightnessctl bc jq"
+void_deps="python3 pywal bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xinit xsetroot dunst maim pamixer playerctl papirus-icon-theme brightnessctl bc jq"
 
 sudo xbps-install -Su y
 for pkg in $void_deps; do
@@ -119,6 +119,39 @@ for pkg_dir in */; do
     fi
 done
 
+logo "Setting up Pywalfox & auto-update wrapper"
+
+if [ ! -d "$HOME/.pywalfox-env" ]; then
+    echo "Creating virtual environment for pywalfox..."
+    python3 -m venv "$HOME/.pywalfox-env"
+    "$HOME/.pywalfox-env/bin/pip" install pywalfox
+    
+    echo "Symlinking pywalfox to ~/.local/bin/pywalfox..."
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$HOME/.pywalfox-env/bin/pywalfox" "$HOME/.local/bin/pywalfox"
+    
+    echo "Installing pywalfox native messaging host for Firefox..."
+    "$HOME/.local/bin/pywalfox" install
+else
+    echo "Pywalfox environment already exists."
+fi
+
+echo "Setting up pywal wrapper to auto-update Firefox..."
+cat << 'EOF' > "$HOME/.local/bin/wal"
+#!/bin/bash
+# Wrapper to update Pywalfox every time wal is called
+/usr/bin/wal "$@"
+exit_status=$?
+
+if [ $exit_status -eq 0 ]; then
+    pywalfox update
+fi
+
+exit $exit_status
+EOF
+chmod +x "$HOME/.local/bin/wal"
+
+
 # Change shell
 if [ "$SHELL" != "/bin/zsh" ]; then
     logo "Changing default shell"
@@ -128,3 +161,4 @@ fi
 
 logo "Installation Complete"
 echo "You can now reboot into your new environment!"
+
