@@ -87,7 +87,10 @@ class EditorHandler(http.server.SimpleHTTPRequestHandler):
         html = HTML_TEMPLATE.replace("{config_content}", content).replace("{message}", message).replace("{alert_display}", alert_display)
         self.wfile.write(html.encode('utf-8'))
 
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 if __name__ == "__main__":
-    with socketserver.TCPServer(("", PORT), EditorHandler) as httpd:
+    with ReusableTCPServer(("", PORT), EditorHandler) as httpd:
         print(f"Serving at http://localhost:{PORT}")
         httpd.serve_forever()
