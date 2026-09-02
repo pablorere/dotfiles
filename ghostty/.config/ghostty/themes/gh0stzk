@@ -1,24 +1,24 @@
-# Colors generated for yael theme.
+# Colors generated for z0mbi3 theme.
 
-background = #161616
-foreground = #ffffff
-cursor-color = #ffffff
-selection-background = #ffffff
-selection-foreground = #161616
+background = #0d0f18
+foreground = #a5b6cf
+cursor-color = #a5b6cf
+selection-background = #a5b6cf
+selection-foreground = #0d0f18
 
-palette = 0=#262626
-palette = 1=#ee5396
-palette = 2=#42be65
-palette = 3=#ffe97b
-palette = 4=#33b1ff
-palette = 5=#ff7eb6
-palette = 6=#3ddbd9
-palette = 7=#dde1e6
-palette = 8=#393939
-palette = 9=#ee5396
-palette = 10=#42be65
-palette = 11=#ffe97b
-palette = 12=#33b1ff
-palette = 13=#ff7eb6
-palette = 14=#3ddbd9
-palette = 15=#ffffff
+palette = 0=#3d414f
+palette = 1=#dd6777
+palette = 2=#90ceaa
+palette = 3=#ecd3a0
+palette = 4=#86aaec
+palette = 5=#c296eb
+palette = 6=#93cee9
+palette = 7=#cbced3
+palette = 8=#3d414f
+palette = 9=#dd6777
+palette = 10=#90ceaa
+palette = 11=#ecd3a0
+palette = 12=#86aaec
+palette = 13=#c296eb
+palette = 14=#93cee9
+palette = 15=#cbced3

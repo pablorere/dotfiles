@@ -11,7 +11,7 @@ alt + F1
 # Open Terminal (Normal & Floating)
 super + {_,alt + }Return
     OpenApps --{terminal,floating}
-
+	
 # App launcher
 super + d
     OpenApps --menu
@@ -24,13 +24,13 @@ alt + @space
 
 # Apps (browser)
 super + w
-    OpenApps -- browser
+    OpenApps --browser
 
 # Terminal apps (yazi, ncmpcpp)
 super + {e,m}
     OpenApps --{yazi,music}
 
-# Media apps (Pavucontrol, Telegram, )
+# Media apps (Pavucontrol, Telegram)
 super + {p,t}
     OpenApps --{soundcontrol,telegram}
 
@@ -40,7 +40,7 @@ super + r
 
 # ----- Rofi Applets ----- #
 
-#Terminal Selector
+# Terminal Selector
 super + alt + t
     Term --selecterm
 
@@ -105,9 +105,9 @@ super + space
     case "$type" in *DESKTOP*) \
         jgmenu_run ;; esac
 
-# Power off, Reboot, Log out, Lockscreen, kill an app
+# Power off, Reboot, Log out, Lockscreen, kill an app, soft reload
 ctrl + super + alt + {p,r,q,l,k,s}
-    {systemctl poweroff, systemctl reboot,bspc quit,ScreenLocker,xkill,SoftReload}
+    {loginctl poweroff || sudo poweroff,loginctl reboot || sudo reboot,bspc quit,ScreenLocker,xkill,SoftReload}
 
 # Hide/Show Bar (Polybar and/or eww)
 super + alt + {h,u}
@@ -166,7 +166,7 @@ ctrl + alt + h
 # ----- Focus/Swap Nodes ----- #
 
 # Rotate desktop
-ctrl + Tab
+ctrl + {_,shift + }Tab
     bspc node @/ --rotate {90,-90}
 
 # Switch workspace
@@ -195,11 +195,11 @@ ctrl + alt + {Left,Down,Up,Right}
     bspc node -s {west,south,north,east}.local
 
 # Focus the last node/desktop
-ctrl + shift {comma,period}
+ctrl + shift + {comma,period}
     bspc {node,desktop} -f last
 
 # Preselect the direction (horizontal, vertical or cancel)
-super + ctrl {h,v,q}
+super + ctrl + {h,v,q}
     bspc node -p {east,south,cancel}
 
 # ----- Move/Resize Nodes ----- #
@@ -246,5 +246,5 @@ super + n ; {1-9}
     bspc query -N -d {1-9} -n '.window' | xargs -I id -n 1 bspc node id -d focused
 
 # Launch SXHKD Web Editor
-alt + F1
+super + F1
 	~/.config/bspwm/bin/LaunchSxhkdEditor

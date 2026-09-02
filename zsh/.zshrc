@@ -157,3 +157,7 @@ fi
 #  ┴ ┴└─┘ ┴ └─┘  └─┘ ┴ ┴ ┴┴└─ ┴
 $HOME/.local/bin/colorscript -r
 disable-fzf-tab
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/void/.local/bin:$PATH"

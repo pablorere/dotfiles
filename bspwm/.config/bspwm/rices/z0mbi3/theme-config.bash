@@ -106,5 +106,5 @@ geany_theme="z0mbi3-Decay"
 ENGINE="Default"
 
 CUSTOM_DIR="/path/to/your/wallpapers/directory"
-DEFAULT_WALL="/home/void/.config/bspwm/rices/z0mbi3/walls/wall-06.webp"
+DEFAULT_WALL="/home/void/.config/bspwm/rices/z0mbi3/walls/wall-04.webp"
 ANIMATED_WALL="/home/void/Downloads/7339159784024.mp4"

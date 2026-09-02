@@ -2,3 +2,9 @@
 *.log
 **/logs/*.log
 !**/logs/.gitkeep
+
+# Python cache & temp
+__pycache__/
+*.py[cod]
+*$py.class
+
