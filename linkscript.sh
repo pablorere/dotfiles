@@ -1,12 +1,34 @@
 #!/bin/bash
 
 # =========================================================================
-#  Stow Link & Install Script
-#  Automatically installs missing packages and manages stow symlinks
-#  with interactive conflict resolution.
+#  Void Linux Installer & Stow Link Script
+#  Automatically installs Void packages, missing commands, and manages 
+#  stow symlinks with interactive conflict resolution.
 # =========================================================================
 
-DOTFILES_DIR="$HOME/.dotfiles"
+echo "==========================================="
+echo "   Void Linux BSPWM Environment Installer  "
+echo "==========================================="
+
+if [ "$(id -u)" = 0 ]; then
+    echo "Please do not run this script as root. Run as your normal user."
+    exit 1
+fi
+
+echo "Updating system and installing base dependencies..."
+# Update the system
+sudo xbps-install -Su y
+
+# Base Xorg, BSPWM components, polybar, rofi, and stow
+PACKAGES="xorg-minimal xorg-fonts xorg-input-drivers xinit bspwm sxhkd polybar rofi stow"
+# Additional useful utilities
+PACKAGES="$PACKAGES alacritty feh picom dunst lxappearance fonts-roboto-ttf dejavu-fonts-ttf"
+
+# Install everything
+sudo xbps-install -Sy $PACKAGES
+
+# Set dotfiles directory dynamically to where the script is located
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Ensure we are in the dotfiles directory
 cd "$DOTFILES_DIR" || {
