@@ -19,13 +19,19 @@ echo "Updating system and installing base dependencies..."
 # Update the system
 sudo xbps-install -Su y
 
-# Base Xorg, BSPWM components, polybar, rofi, and stow
-PACKAGES="xorg-minimal xorg-fonts xorg-input-drivers xinit bspwm sxhkd polybar rofi stow"
-# Additional useful utilities
-PACKAGES="$PACKAGES alacritty feh picom dunst lxappearance fonts-roboto-ttf dejavu-fonts-ttf"
+# Comprehensive Void dependencies from void-rice-installer
+PACKAGES="alacritty base-devel bat bc brightnessctl bspwm clipcat dunst eza feh fzf thunar tumbler gvfs firefox geany git imagemagick jq ghostty libwebp maim mpc mpd mpv neovim ncmpcpp npm pamixer pacman-contrib papirus-icon-theme picom playerctl polybar python3-gobject redshift rofi rust sxhkd stow xclip xdg-user-dirs xdo xdotool xorg-minimal xorg-fonts xorg-input-drivers xinit xkill xprop xrandr xsetroot xwininfo xrdb yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
 
 # Install everything
-sudo xbps-install -Sy $PACKAGES
+for pkg in $PACKAGES; do
+    sudo xbps-install -y "$pkg" || echo "⚠️ Failed to install $pkg, continuing..."
+done
+
+# Change default shell to zsh
+if [ "$SHELL" != "/bin/zsh" ]; then
+    echo "Changing shell to zsh..."
+    chsh -s /bin/zsh || true
+fi
 
 # Set dotfiles directory dynamically to where the script is located
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
