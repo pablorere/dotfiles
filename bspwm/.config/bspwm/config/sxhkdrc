@@ -69,7 +69,7 @@ super + alt + b
     OpenApps --bluetooth
 
 # Clipboard
-super + alt + c
+super + v
     OpenApps --clipboard
 
 # Screenshot
@@ -253,6 +253,14 @@ super + n ; m
 super + n ; {1-9}
     bspc query -N -d {1-9} -n '.window' | xargs -I id -n 1 bspc node id -d focused
 
+# Monitor Manager
+super + F12
+    MonitorManager
+
+# Stream Music (YouTube/SoundCloud to MPD)
+super + y
+    StreamMusic
+
 # Launch SXHKD Web Editor
 alt + f1
-	~/.config/bspwm/bin/LaunchSxhkdEditor
+    ~/.config/bspwm/bin/LaunchSxhkdEditor
