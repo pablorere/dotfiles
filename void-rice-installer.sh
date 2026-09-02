@@ -136,18 +136,80 @@ else
     echo "Pywalfox environment already exists."
 fi
 
-echo "Setting up pywal wrapper to auto-update Firefox..."
+echo "Setting up pywal wrapper to auto-update Firefox and cache colors..."
 cat << 'EOF' > "$HOME/.local/bin/wal"
 #!/bin/bash
-# Wrapper to update Pywalfox every time wal is called
-/usr/bin/wal "$@"
-exit_status=$?
+# Wrapper to save pywal colors to filename.pywallcolor and reuse them if available,
+# and to update Pywalfox every time wal is called.
 
-if [ $exit_status -eq 0 ]; then
+declare -a NEW_ARGS
+IMG_PATH=""
+IMG_INDEX=-1
+i=0
+
+# Parse arguments to find -i and its value
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -i)
+            NEW_ARGS+=("-f") # Temporarily set to -f, might change back
+            IMG_INDEX=$i
+            shift
+            if [[ $# -gt 0 ]]; then
+                IMG_PATH="$1"
+                # Keep a placeholder for the argument value
+                NEW_ARGS+=("$IMG_PATH")
+                ((i+=2))
+                shift
+            else
+                ((i++))
+            fi
+            ;;
+        *)
+            NEW_ARGS+=("$1")
+            ((i++))
+            shift
+            ;;
+    esac
+done
+
+EXIT_STATUS=0
+
+if [[ -n "$IMG_PATH" ]]; then
+    # -i was provided
+    if [[ -f "${IMG_PATH}.pywallcolor" ]]; then
+        # Use the saved color scheme instead of generating a new one
+        echo "Found saved color scheme for $IMG_PATH, using it instead of recalculating..."
+        # Replace the placeholder with the .pywallcolor file path
+        NEW_ARGS[$((IMG_INDEX+1))]="${IMG_PATH}.pywallcolor"
+        
+        /usr/bin/wal "${NEW_ARGS[@]}"
+        EXIT_STATUS=$?
+    else
+        # No saved color scheme, run normally and then save it
+        echo "No saved color scheme found for $IMG_PATH, generating new one..."
+        # Restore -i flag instead of -f
+        NEW_ARGS[$IMG_INDEX]="-i"
+        
+        /usr/bin/wal "${NEW_ARGS[@]}"
+        EXIT_STATUS=$?
+        
+        if [[ $EXIT_STATUS -eq 0 && -f "$HOME/.cache/wal/colors.json" ]]; then
+            echo "Saving color scheme to ${IMG_PATH}.pywallcolor..."
+            cp "$HOME/.cache/wal/colors.json" "${IMG_PATH}.pywallcolor"
+        fi
+    fi
+else
+    # -i was not provided, just run normally
+    /usr/bin/wal "${NEW_ARGS[@]}"
+    EXIT_STATUS=$?
+fi
+
+# Finally, update pywalfox if successful
+if [[ $EXIT_STATUS -eq 0 ]]; then
     pywalfox update
 fi
 
-exit $exit_status
+exit $EXIT_STATUS
 EOF
 chmod +x "$HOME/.local/bin/wal"
 
