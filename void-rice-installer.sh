@@ -16,7 +16,8 @@ read -r yn
 case "$yn" in [Yy]*);; *) echo "Cancelled."; exit 0;; esac
 
 logo "Installing Void Dependencies"
-void_deps="alacritty base-devel bat bc brightnessctl bspwm clipcat dunst eza feh fzf thunar tumbler gvfs firefox geany git imagemagick jq ghostty libwebp maim mpc mpd mpv neovim ncmpcpp npm pamixer pacman-contrib papirus-icon-theme picom playerctl polybar python3-gobject redshift rofi rust sxhkd stow xclip xdg-user-dirs xdo xdotool xorg-minimal xorg-fonts xorg-input-drivers xinit xkill xprop xrandr xsetroot xwininfo xrdb yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting"
+# Selected by user + critical Xorg dependencies (xorg-minimal xorg-fonts xorg-input-drivers xinit xsetroot)
+void_deps="bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-fonts xorg-input-drivers xinit xsetroot"
 
 sudo xbps-install -Su y
 for pkg in $void_deps; do
