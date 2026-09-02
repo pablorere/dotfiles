@@ -4,10 +4,12 @@ import socketserver
 import urllib.parse
 import os
 import subprocess
+import shutil
 
 PORT = 8999
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-SXHKDRC_PATH = os.path.expanduser("~/.config/bspwm/config/sxhkdrc")
+SXHKDRC_REPO_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "../config/sxhkdrc"))
+SXHKDRC_SYS_PATH = os.path.expanduser("~/.config/bspwm/config/sxhkdrc")
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -44,7 +46,7 @@ class EditorHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         
         try:
-            with open(SXHKDRC_PATH, "r") as f:
+            with open(SXHKDRC_REPO_PATH, "r") as f:
                 content = f.read()
         except Exception as e:
             content = f"Error reading file: {e}"
@@ -62,20 +64,28 @@ class EditorHandler(http.server.SimpleHTTPRequestHandler):
             # Convert Windows newlines to Unix newlines
             new_config = new_config.replace('\r\n', '\n')
             
-            with open(SXHKDRC_PATH, "w") as f:
+            # Save to repo
+            with open(SXHKDRC_REPO_PATH, "w") as f:
                 f.write(new_config)
                 
+            # Create backup and symlink if needed
+            if not (os.path.islink(SXHKDRC_SYS_PATH) and os.readlink(SXHKDRC_SYS_PATH) == SXHKDRC_REPO_PATH):
+                if os.path.exists(SXHKDRC_SYS_PATH) or os.path.islink(SXHKDRC_SYS_PATH):
+                    shutil.move(SXHKDRC_SYS_PATH, SXHKDRC_SYS_PATH + ".bak")
+                os.makedirs(os.path.dirname(SXHKDRC_SYS_PATH), exist_ok=True)
+                os.symlink(SXHKDRC_REPO_PATH, SXHKDRC_SYS_PATH)
+
             # Reload sxhkd
             subprocess.run(["pkill", "-USR1", "-x", "sxhkd"])
             
-            message = "Configuration saved successfully! SXHKD has been reloaded."
+            message = "Configuration saved and linked successfully! SXHKD has been reloaded."
             alert_display = "block"
         else:
             message = "Error: No configuration data received."
             alert_display = "block"
             
         try:
-            with open(SXHKDRC_PATH, "r") as f:
+            with open(SXHKDRC_REPO_PATH, "r") as f:
                 content = f.read()
         except Exception:
             content = ""
