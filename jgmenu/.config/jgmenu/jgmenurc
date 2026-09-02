@@ -1,0 +1,35 @@
+position_mode       = pointer
+stay_alive          = 0
+csv_cmd             = apps
+csv_no_dirs         = 0
+tint2_look          = 0
+terminal_exec       = st
+terminal_args       =
+menu_width          = 205
+menu_padding_top    = 38
+menu_padding_right  = 5
+menu_padding_bottom = 5
+menu_padding_left   = 5
+menu_radius         = 6
+menu_border         = 2
+menu_halign         = left
+sub_hover_action    = 1
+item_margin_y       = 5
+item_height         = 25
+item_padding_x      = 8
+item_radius         = 6
+item_border         = 0
+sep_height          = 2
+font                = Clarity City Bold 13px
+icon_size           = 16
+icon_theme          = Papirus-Dark
+arrow_string        = 󰄾
+
+# Colors
+color_menu_border = #212121
+color_menu_bg = #161616
+color_norm_fg = #ffffff
+color_sel_bg = #33b1ff
+color_sel_fg = #161616
+color_sep_fg = #ee5396
+color_norm_bg = #ffffff 0
