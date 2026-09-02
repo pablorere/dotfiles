@@ -19,7 +19,7 @@ logo "Installing Void Dependencies"
 # Selected by user + critical Xorg dependencies + recommended silent helpers
 void_deps="python3 pywal bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xinit xsetroot dunst maim pamixer playerctl papirus-icon-theme brightnessctl bc jq"
 
-sudo xbps-install -Su y
+sudo xbps-install -Suy
 for pkg in $void_deps; do
     sudo xbps-install -y "$pkg" || echo "Failed to install $pkg, continuing..."
 done
@@ -131,7 +131,8 @@ if [ ! -d "$HOME/.pywalfox-env" ]; then
     ln -sf "$HOME/.pywalfox-env/bin/pywalfox" "$HOME/.local/bin/pywalfox"
     
     echo "Installing pywalfox native messaging host for Firefox..."
-    "$HOME/.local/bin/pywalfox" install
+    mkdir -p "$HOME/.mozilla/native-messaging-hosts"
+    "$HOME/.local/bin/pywalfox" install || echo "Pywalfox install warning (safe to ignore if Firefox is not yet run)."
 else
     echo "Pywalfox environment already exists."
 fi
