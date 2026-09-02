@@ -17,7 +17,7 @@ case "$yn" in [Yy]*);; *) echo "Cancelled."; exit 0;; esac
 
 logo "Installing Void Dependencies"
 # Selected by user + critical Xorg dependencies + recommended silent helpers
-void_deps="bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-fonts xorg-input-drivers xinit xsetroot dunst maim pamixer playerctl papirus-icon-theme brightnessctl bc jq"
+void_deps="bat bspwm clipcat eza feh fzf git ghostty mpc mpd mpv neovim ncmpcpp npm picom polybar rofi sxhkd stow xclip xdotool xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xinit xsetroot dunst maim pamixer playerctl papirus-icon-theme brightnessctl bc jq"
 
 sudo xbps-install -Su y
 for pkg in $void_deps; do
