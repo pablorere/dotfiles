@@ -5,7 +5,7 @@ import urllib.parse
 import os
 import subprocess
 
-PORT = 8080
+PORT = 8999
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SXHKDRC_PATH = os.path.abspath(os.path.join(SCRIPT_DIR, "../config/sxhkdrc"))
 
