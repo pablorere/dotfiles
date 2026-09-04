@@ -33,6 +33,7 @@ cp -v /home/void/.dotfiles/void-rice-installer.sh "$USB_DIR/" 2>/dev/null || tru
 cp -v /home/void/.dotfiles/void-rice-revert.sh "$USB_DIR/" 2>/dev/null || true
 cp -v /home/void/.dotfiles/wifi-connect.sh "$USB_DIR/" 2>/dev/null || true
 cp -v /home/void/.dotfiles/install-nvidia.sh "$USB_DIR/" 2>/dev/null || true
+cp -v /home/void/.dotfiles/install-ly.sh "$USB_DIR/" 2>/dev/null || true
 cp -v /home/void/.dotfiles/copy-to-usb.sh "$USB_DIR/" 2>/dev/null || true
 
 # Update dotfiles directory / repository on USB

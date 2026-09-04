@@ -327,6 +327,12 @@ echo "Ensuring execution permissions for bspwm scripts..."
 [ -f "$HOME/.xinitrc" ] && chmod +x "$HOME/.xinitrc" 2>/dev/null || true
 
 
+# Install Ly Display Manager
+if [ -f "$repo_dir/install-ly.sh" ]; then
+    logo "Installing Ly Display Manager"
+    sudo "$repo_dir/install-ly.sh"
+fi
+
 # Change shell
 if [ "$SHELL" != "/bin/zsh" ]; then
     logo "Changing default shell"
