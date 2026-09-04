@@ -8,11 +8,13 @@ set_wall() {
     [ -z "$1" ] && return
     mon_count=$(xrandr --listmonitors 2>/dev/null | awk '/^Monitors:/ {print $2}')
     [ -z "$mon_count" ] || [ "$mon_count" -lt 1 ] && mon_count=1
-    wall_args=()
-    for ((i=0; i<mon_count; i++)); do
-        wall_args+=("$1")
+    wall_args=""
+    i=0
+    while [ "$i" -lt "$mon_count" ]; do
+        wall_args="$wall_args \"$1\""
+        i=$((i + 1))
     done
-    feh --bg-fill "${wall_args[@]}"
+    eval feh --bg-fill "$wall_args"
     WallSync &
 }
 

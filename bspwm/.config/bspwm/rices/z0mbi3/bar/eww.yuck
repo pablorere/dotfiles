@@ -258,6 +258,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defwindow bar [monitor]
+	:monitor monitor
 	:geometry (geometry :x "10px"
 						:y "0%"
 						:anchor "left center"

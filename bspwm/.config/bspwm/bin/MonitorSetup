@@ -44,6 +44,10 @@ get_monitor_info() {
 # put it first in the list, instead of always using the first output
 # xrandr happens to enumerate.
 PRIMARY_MON=$(echo "$XRANDR_OUTPUT" | awk '$2 == "connected" && $3 == "primary" { print $1; exit }')
+# If no primary is explicitly configured, prefer external monitors (HDMI, DP) over internal laptop screen
+if [ -z "$PRIMARY_MON" ]; then
+    PRIMARY_MON=$(echo "$XRANDR_OUTPUT" | awk '$2 == "connected" && ($1 ~ /^HDMI/ || $1 ~ /^DP/ || $1 ~ /^DisplayPort/) { print $1; exit }')
+fi
 
 # Get connected monitors
 set -- $(echo "$XRANDR_OUTPUT" | awk '$2 == "connected" {print $1}')

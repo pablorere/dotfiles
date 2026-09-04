@@ -130,9 +130,18 @@ wall_selection=$(xargs -0 basename -a < "$file_list" |
     done | $rofi_command)
 
 # Set wallpaper
-[ -n "$wall_selection" ] && \
+if [ -n "$wall_selection" ]; then
     sed -i "$HOME/.config/bspwm/rices/$current_rice/theme-config.bash" \
         -e 's/^ENGINE=.*/ENGINE="Default"/' \
-        -e "s|^DEFAULT_WALL=.*|DEFAULT_WALL=\"$wall_dir/$wall_selection\"|" && \
-    feh --bg-fill "${wall_dir}/${wall_selection}" && \
-    WallSync &
+        -e "s|^DEFAULT_WALL=.*|DEFAULT_WALL=\"$wall_dir/$wall_selection\"|"
+    
+    mon_count=$(xrandr --listmonitors 2>/dev/null | awk '/^Monitors:/ {print $2}')
+    [ -z "$mon_count" ] || [ "$mon_count" -lt 1 ] && mon_count=1
+    wall_args=""
+    i=0
+    while [ "$i" -lt "$mon_count" ]; do
+        wall_args="$wall_args \"$wall_dir/$wall_selection\""
+        i=$((i + 1))
+    done
+    eval feh --bg-fill "$wall_args" && WallSync &
+fi
