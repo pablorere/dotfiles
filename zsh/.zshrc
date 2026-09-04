@@ -27,6 +27,7 @@ fi
 autoload -Uz compinit
 
 local zcompdump="$HOME/.config/zsh/zcompdump"
+[[ -d "$HOME/.config/zsh" ]] || mkdir -p "$HOME/.config/zsh"
 
 if [[ -n "$zcompdump"(#qN.mh+24) ]]; then
     compinit -i -d "$zcompdump"
@@ -35,7 +36,7 @@ else
 fi
 
 if [[ ! -f "${zcompdump}.zwc" || "$zcompdump" -nt "${zcompdump}.zwc" ]]; then
-    zcompile -U "$zcompdump"
+    zcompile -U "$zcompdump" 2>/dev/null
 fi
 
 
@@ -115,10 +116,15 @@ PS1='%B%F{blue}%f%b  %B%F{magenta}%n%f%b $(dir_icon)  %B%F{red}%~%f%b${vcs_info_
 #  ┌─┐┬  ┬ ┬┌─┐┬┌┐┌┌─┐
 #  ├─┘│  │ ││ ┬││││└─┐
 #  ┴  ┴─┘└─┘└─┘┴┘└┘└─┘
-source /home/void/.config/zsh/plugins/fzf-tab-git/fzf-tab.zsh
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+if [ -f "$HOME/.config/zsh/plugins/fzf-tab-git/fzf-tab.zsh" ]; then
+    source "$HOME/.config/zsh/plugins/fzf-tab-git/fzf-tab.zsh"
+elif [ -f /usr/share/zsh/plugins/fzf-tab/fzf-tab.zsh ]; then
+    source /usr/share/zsh/plugins/fzf-tab/fzf-tab.zsh
+fi
+
+[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[ -f /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh ] && source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
 
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
@@ -155,7 +161,14 @@ fi
 #  ┌─┐┬ ┬┌┬┐┌─┐  ┌─┐┌┬┐┌─┐┬─┐┌┬┐
 #  ├─┤│ │ │ │ │  └─┐ │ ├─┤├┬┘ │
 #  ┴ ┴└─┘ ┴ └─┘  └─┘ ┴ ┴ ┴┴└─ ┴
-$HOME/.local/bin/colorscript -r
+if [ -x "$HOME/.local/bin/colorscript" ]; then
+    "$HOME/.local/bin/colorscript" -r
+elif command -v colorscript >/dev/null 2>&1; then
+    colorscript -r
+fi
+
+# Fallback stub for disable-fzf-tab if fzf-tab is not loaded
+(( $+functions[disable-fzf-tab] )) || disable-fzf-tab() { :; }
 disable-fzf-tab
 
 

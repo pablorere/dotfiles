@@ -271,6 +271,13 @@ exit $EXIT_STATUS
 EOF
 chmod +x "$HOME/.local/bin/wal"
 
+# Setup fzf-tab zsh plugin
+if [ ! -d "$HOME/.config/zsh/plugins/fzf-tab-git" ]; then
+    echo "Cloning fzf-tab zsh plugin..."
+    mkdir -p "$HOME/.config/zsh/plugins"
+    git clone --depth 1 https://github.com/Aloxaf/fzf-tab "$HOME/.config/zsh/plugins/fzf-tab-git" || true
+fi
+
 # Change shell
 if [ "$SHELL" != "/bin/zsh" ]; then
     logo "Changing default shell"
