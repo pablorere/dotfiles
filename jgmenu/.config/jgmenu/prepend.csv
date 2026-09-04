@@ -1,5 +1,5 @@
 @icon,,15,12,18,18,0,left,top,,,.config/bspwm/config/assets/search.svg
-@search,,46,12,120,20,2,left,top,#a5b6cf,,Type to search
+@search,,46,12,120,20,2,left,top,#FDFDFD,,Type to search
 ^sep()
 
 Terminal,OpenApps --floating,terminal

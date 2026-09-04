@@ -26,10 +26,10 @@ icon_theme          = Papirus-Dark
 arrow_string        = 󰄾
 
 # Colors
-color_menu_border = #151720
-color_menu_bg = #0d0f18
-color_norm_fg = #a5b6cf
-color_sel_bg = #151720
-color_sel_fg = #a5b6cf
-color_sep_fg = #3d414f
+color_menu_border = #1F222B
+color_menu_bg = #1D1F28
+color_norm_fg = #FDFDFD
+color_sel_bg = #556FFF
+color_sel_fg = #FDFDFD
+color_sep_fg = #556FFF
 color_norm_bg = #ffffff 0

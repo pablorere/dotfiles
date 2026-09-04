@@ -119,6 +119,15 @@
         (label :class "keys" :xalign 0 :text "Close all nodes in desktop")
         (label :class "keys-alt" :xalign 1 :text "Super + Ctrl + x"))
       (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Close unfocused windows")
+        (label :class "keys-alt" :xalign 1 :text "Super + n ; x"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Kill unfocused windows")
+        (label :class "keys-alt" :xalign 1 :text "Super + n ; k"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Bring marked to desktop")
+        (label :class "keys-alt" :xalign 1 :text "Super + n ; m"))
+      (box :orientation "h" :space-evenly "true"
         (label :class "keys" :xalign 0 :text "Set Node Floating")
         (label :class "keys-alt" :xalign 1 :text "Alt + a"))
       (box :orientation "h" :space-evenly "true"
@@ -210,7 +219,7 @@
         (label :class "keys-alt" :xalign 1 :text "Super + Alt + b"))
       (box :orientation "h" :space-evenly "true"
         (label :class "keys" :xalign 0 :text "Clipboard")
-        (label :class "keys-alt" :xalign 1 :text "Super + Alt + c"))
+        (label :class "keys-alt" :xalign 1 :text "Super + v"))
       (box :orientation "h" :space-evenly "true"
         (label :class "keys" :xalign 0 :text "Android Mount")
         (label :class "keys-alt" :xalign 1 :text "Super + Alt + a"))
@@ -226,6 +235,9 @@
       (box :orientation "h" :space-evenly "true"
         (label :class "keys" :xalign 0 :text "Password Manager")
         (label :class "keys-alt" :xalign 1 :text "Super + Alt + x"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "SXHKD Web Editor")
+        (label :class "keys-alt" :xalign 1 :text "Alt + F2"))
       (box :orientation "h" :space-evenly "true"
         (label :class "category-apps" :xalign 0.5 :text "Apps")
         (label :text ""))
@@ -248,8 +260,23 @@
         (label :class "keys" :xalign 0 :text "Pavucontrol")
         (label :class "keys-alt" :xalign 1 :text "Super + p"))
       (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Steam")
+        (label :class "keys-alt" :xalign 1 :text "steam"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Screenshot (Fullscreen)")
+        (label :class "keys-alt" :xalign 1 :text "Print"))
+      (box :orientation "h" :space-evenly "true"
         (label :class "keys" :xalign 0 :text "Screenshot (Select)")
         (label :class "keys-alt" :xalign 1 :text "Shift + Print"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "category-monitors" :xalign 0.5 :text "Monitors")
+        (label :text ""))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Auto-configure Monitors")
+        (label :class "keys-alt" :xalign 1 :text "Super + Alt + m"))
+      (box :orientation "h" :space-evenly "true"
+        (label :class "keys" :xalign 0 :text "Monitor Layout (ARandR)")
+        (label :class "keys-alt" :xalign 1 :text "Super + F12"))
       (box :orientation "h" :space-evenly "true"
         (label :class "category-power" :xalign 0.5 :text "Power")
         (label :text ""))

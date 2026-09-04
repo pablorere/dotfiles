@@ -1,24 +1,24 @@
-# Colors generated for z0mbi3 theme.
+# Colors generated for pamela theme.
 
-background = #0d0f18
-foreground = #a5b6cf
-cursor-color = #a5b6cf
-selection-background = #a5b6cf
-selection-foreground = #0d0f18
+background = #1D1F28
+foreground = #FDFDFD
+cursor-color = #FDFDFD
+selection-background = #FDFDFD
+selection-foreground = #1D1F28
 
-palette = 0=#3d414f
-palette = 1=#dd6777
-palette = 2=#90ceaa
-palette = 3=#ecd3a0
-palette = 4=#86aaec
-palette = 5=#c296eb
-palette = 6=#93cee9
-palette = 7=#cbced3
-palette = 8=#3d414f
-palette = 9=#dd6777
-palette = 10=#90ceaa
-palette = 11=#ecd3a0
-palette = 12=#86aaec
-palette = 13=#c296eb
-palette = 14=#93cee9
-palette = 15=#cbced3
+palette = 0=#282A36
+palette = 1=#F37F97
+palette = 2=#5ADECD
+palette = 3=#F2A272
+palette = 4=#8897F4
+palette = 5=#C574DD
+palette = 6=#79E6F3
+palette = 7=#FDFDFD
+palette = 8=#414458
+palette = 9=#FF4971
+palette = 10=#18E3C8
+palette = 11=#FF8037
+palette = 12=#556FFF
+palette = 13=#B043D1
+palette = 14=#3FDCEE
+palette = 15=#BEBEC1
