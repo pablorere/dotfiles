@@ -326,6 +326,7 @@ echo "Ensuring execution permissions for bspwm scripts..."
 [ -d "$HOME/.config/bspwm/bin" ] && chmod +x "$HOME"/.config/bspwm/bin/* 2>/dev/null || true
 [ -f "$HOME/.xinitrc" ] && chmod +x "$HOME/.xinitrc" 2>/dev/null || true
 
+
 # Change shell
 if [ "$SHELL" != "/bin/zsh" ]; then
     logo "Changing default shell"

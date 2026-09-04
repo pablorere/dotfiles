@@ -1,2 +1,2 @@
 #!/bin/sh
-feh --no-fehbg --bg-fill '/home/void/.config/bspwm/rices/z0mbi3/walls/wall-04.webp' 
+/usr/bin/feh --no-fehbg --bg-fill '/home/void/.config/bspwm/rices/pamela/walls/wall-01.webp' '/home/void/.config/bspwm/rices/pamela/walls/wall-01.webp' 
