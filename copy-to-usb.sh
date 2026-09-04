@@ -27,19 +27,30 @@ fi
 echo "Found USB device: $DEVICE"
 mount "$DEVICE" "$USB_DIR" || { echo "❌ Failed to mount $DEVICE to $USB_DIR"; exit 1; }
 
-echo "Copying updated installer and dotfiles to $USB_DIR..."
+echo "Copying updated installer, scripts and dotfiles to $USB_DIR..."
 # Copy installer scripts
-cp -v /home/void/.dotfiles/void-rice-installer.sh "$USB_DIR/"
+cp -v /home/void/.dotfiles/void-rice-installer.sh "$USB_DIR/" 2>/dev/null || true
 cp -v /home/void/.dotfiles/void-rice-revert.sh "$USB_DIR/" 2>/dev/null || true
 cp -v /home/void/.dotfiles/wifi-connect.sh "$USB_DIR/" 2>/dev/null || true
+cp -v /home/void/.dotfiles/install-nvidia.sh "$USB_DIR/" 2>/dev/null || true
+cp -v /home/void/.dotfiles/copy-to-usb.sh "$USB_DIR/" 2>/dev/null || true
 
-# If the USB has a dotfiles repo or folder, update it too
+# Update dotfiles directory / repository on USB
+TARGET_DOTFILES=""
 if [ -d "$USB_DIR/.dotfiles" ]; then
-    echo "Updating $USB_DIR/.dotfiles..."
-    rsync -av --exclude '.git' /home/void/.dotfiles/ "$USB_DIR/.dotfiles/" 2>/dev/null || cp -r /home/void/.dotfiles/* "$USB_DIR/.dotfiles/"
+    TARGET_DOTFILES="$USB_DIR/.dotfiles"
 elif [ -d "$USB_DIR/dotfiles" ]; then
-    echo "Updating $USB_DIR/dotfiles..."
-    rsync -av --exclude '.git' /home/void/.dotfiles/ "$USB_DIR/dotfiles/" 2>/dev/null || cp -r /home/void/.dotfiles/* "$USB_DIR/dotfiles/"
+    TARGET_DOTFILES="$USB_DIR/dotfiles"
+else
+    TARGET_DOTFILES="$USB_DIR/dotfiles"
+    mkdir -p "$TARGET_DOTFILES"
+fi
+
+echo "Updating $TARGET_DOTFILES..."
+if command -v rsync >/dev/null 2>&1; then
+    rsync -av /home/void/.dotfiles/ "$TARGET_DOTFILES/"
+else
+    cp -a /home/void/.dotfiles/. "$TARGET_DOTFILES/"
 fi
 
 sync
