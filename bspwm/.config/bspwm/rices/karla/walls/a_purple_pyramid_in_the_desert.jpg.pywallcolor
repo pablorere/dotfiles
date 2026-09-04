@@ -1,0 +1,28 @@
+{
+    "wallpaper": "/home/void/.config/bspwm/rices/karla/walls/a_purple_pyramid_in_the_desert.jpg",
+    "alpha": "100",
+
+    "special": {
+        "background": "#160020",
+        "foreground": "#e977c4",
+        "cursor": "#e977c4"
+    },
+    "colors": {
+        "color0": "#160020",
+        "color1": "#55129E",
+        "color2": "#940089",
+        "color3": "#AC008A",
+        "color4": "#912E91",
+        "color5": "#A925A5",
+        "color6": "#CE008B",
+        "color7": "#e977c4",
+        "color8": "#a35389",
+        "color9": "#55129E",
+        "color10": "#940089",
+        "color11": "#AC008A",
+        "color12": "#912E91",
+        "color13": "#A925A5",
+        "color14": "#CE008B",
+        "color15": "#e977c4"
+    }
+}

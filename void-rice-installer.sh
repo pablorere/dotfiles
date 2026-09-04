@@ -16,9 +16,16 @@ fi
 logo "Welcome $USER to the Void Linux Setup"
 printf "${CGR}This script will install dependencies, configure services, and link your dotfiles using stow.${CNC}\n\n"
 
-printf "Continue? [y/N]: "
-read -r yn
-case "$yn" in [Yy]*);; *) echo "Cancelled."; exit 0;; esac
+AUTO_CONFIRM=0
+if [[ "$1" == "-y" || "$1" == "--yes" ]]; then
+    AUTO_CONFIRM=1
+fi
+
+if [ "$AUTO_CONFIRM" -eq 0 ]; then
+    printf "Continue? [y/N]: "
+    read -r yn
+    case "$yn" in [Yy]*);; *) echo "Cancelled."; exit 0;; esac
+fi
 
 # Keep sudo credentials alive in background
 sudo -v
@@ -42,7 +49,7 @@ if ! sudo xbps-install -y $void_deps; then
 fi
 
 logo "Adding User to System Groups"
-for grp in video audio input storage wheel; do
+for grp in video audio input storage wheel disk network; do
     sudo usermod -aG "$grp" "$USER" 2>/dev/null || true
 done
 
@@ -79,15 +86,42 @@ mkdir -p "$HOME/Music" "$HOME/Downloads" "$HOME/Pictures" "$HOME/.local/bin"
 logo "Downloading & Linking dotfiles"
 repo_url="https://github.com/pablorere/dotfiles.git"
 repo_dir="$HOME/.dotfiles"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [ ! -d "$repo_dir" ]; then
-    git clone "$repo_url" "$repo_dir"
+    if [ -f "$SCRIPT_DIR/zsh/.zshrc" ]; then
+        echo "Copying dotfiles from local installer directory ($SCRIPT_DIR) to $repo_dir..."
+        cp -a "$SCRIPT_DIR" "$repo_dir"
+    else
+        echo "Cloning dotfiles from $repo_url..."
+        git clone "$repo_url" "$repo_dir" || true
+    fi
 else
     echo "Dotfiles repo already exists at $repo_dir, pulling latest..."
-    cd "$repo_dir" && git pull || true
+    ( cd "$repo_dir" && git pull ) || true
 fi
 
 cd "$repo_dir"
+
+logo "Installing Fonts, ASCII Art & Helper Tools"
+mkdir -p "$HOME/.local/bin" "$HOME/.local/share/fonts" "$HOME/.local/share/applications" "$HOME/.local/share/asciiart"
+
+if [ -d "$repo_dir/misc" ]; then
+    echo "Installing helper binaries to ~/.local/bin..."
+    [ -d "$repo_dir/misc/bin" ] && cp -r "$repo_dir/misc/bin"/* "$HOME/.local/bin/" && chmod +x "$HOME/.local/bin"/* 2>/dev/null || true
+
+    echo "Installing asciiart to ~/.local/share/asciiart..."
+    [ -d "$repo_dir/misc/asciiart" ] && cp -r "$repo_dir/misc/asciiart"/* "$HOME/.local/share/asciiart/" 2>/dev/null || true
+
+    echo "Installing custom ricing fonts to ~/.local/share/fonts..."
+    [ -d "$repo_dir/misc/fonts" ] && cp -r "$repo_dir/misc/fonts"/* "$HOME/.local/share/fonts/" 2>/dev/null || true
+
+    echo "Installing desktop entries to ~/.local/share/applications..."
+    [ -d "$repo_dir/misc/applications" ] && cp -r "$repo_dir/misc/applications"/* "$HOME/.local/share/applications/" 2>/dev/null || true
+
+    echo "Updating font cache..."
+    fc-cache -f "$HOME/.local/share/fonts" 2>/dev/null || true
+fi
 
 backup_folder="$HOME/.RiceBackup/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$backup_folder"
@@ -96,7 +130,7 @@ logo "Stowing packages"
 for pkg_dir in */; do
     pkg=${pkg_dir%/} # Remove trailing slash
     
-    if [[ "$pkg" == .* || "$pkg" == "scratch" || "$pkg" == "__pycache__" ]]; then
+    if [[ "$pkg" == .* || "$pkg" == "scratch" || "$pkg" == "__pycache__" || "$pkg" == "misc" ]]; then
         continue
     fi
     
@@ -133,8 +167,14 @@ for pkg_dir in */; do
         done
 
         while true; do
-            echo -ne "Action for $pkg? [O]verwrite / [B]ackup / [A]dopt / [S]kip: "
-            read action </dev/tty
+            action=""
+            if [ "$AUTO_CONFIRM" -eq 1 ]; then
+                action="B"
+            else
+                echo -ne "Action for $pkg? [O]verwrite / [B]ackup / [A]dopt / [S]kip (default: Backup): "
+                read -t 30 action </dev/tty 2>/dev/null || read -t 30 action 2>/dev/null || action="B"
+                [ -z "$action" ] && action="B"
+            fi
             case "$action" in
                 [Oo]* )
                     for rel_path in "${conflicts[@]}"; do
@@ -278,11 +318,28 @@ if [ ! -d "$HOME/.config/zsh/plugins/fzf-tab-git" ]; then
     git clone --depth 1 https://github.com/Aloxaf/fzf-tab "$HOME/.config/zsh/plugins/fzf-tab-git" || true
 fi
 
+# Ensure zsh config and history dirs exist
+mkdir -p "$HOME/.config/zsh"
+
+# Ensure all scripts in bspwm bin and root scripts are executable
+echo "Ensuring execution permissions for bspwm scripts..."
+[ -d "$HOME/.config/bspwm/bin" ] && chmod +x "$HOME"/.config/bspwm/bin/* 2>/dev/null || true
+[ -f "$HOME/.xinitrc" ] && chmod +x "$HOME/.xinitrc" 2>/dev/null || true
+
 # Change shell
 if [ "$SHELL" != "/bin/zsh" ]; then
     logo "Changing default shell"
     echo "Changing shell to zsh..."
-    chsh -s /bin/zsh || true
+    sudo chsh -s /bin/zsh "$USER" 2>/dev/null || chsh -s /bin/zsh || true
+fi
+
+logo "Initializing Theme & Colors"
+if command -v wal >/dev/null 2>&1; then
+    DEFAULT_WALL=$(find "$HOME/.config/bspwm/rices" -type f \( -name "*.jpg" -o -name "*.png" \) 2>/dev/null | head -n 1 || true)
+    if [ -n "$DEFAULT_WALL" ]; then
+        echo "Generating initial colors from $DEFAULT_WALL..."
+        wal -i "$DEFAULT_WALL" -s -t 2>/dev/null || true
+    fi
 fi
 
 logo "Installation Complete"
