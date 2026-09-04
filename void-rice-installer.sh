@@ -35,7 +35,7 @@ trap 'kill $SUDO_PID 2>/dev/null || true' EXIT
 
 logo "Installing Void Dependencies"
 # Full list of core window manager, desktop daemons, audio stack, helpers, and utilities
-void_deps="python3 python3-pip pywal bat bspwm sxhkd stow eza feh fzf git curl tar ghostty alacritty kitty mpc mpd mpv neovim ncmpcpp nodejs picom polybar eww rofi jgmenu xclip xdotool xdo xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xf86-input-synaptics xinit xsetroot xset xprop xwininfo xrdb xkill dbus dbus-x11 elogind polkit xfce-polkit pipewire wireplumber pavucontrol pamixer playerctl dunst libnotify maim papirus-icon-theme brightnessctl bc jq xsettingsd webp-pixbuf-loader"
+void_deps="python3 python3-pip pywal bat bspwm sxhkd stow eza feh fzf git curl tar ghostty alacritty kitty mpc mpd mpv neovim ncmpcpp nodejs picom polybar eww rofi jgmenu xclip xdotool xdo xrandr yazi zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting xorg-minimal xorg-server xorg-fonts xorg-video-drivers xorg-input-drivers xf86-input-synaptics xinit xsetroot xset xprop xwininfo xrdb xkill dbus dbus-x11 elogind polkit xfce-polkit pipewire wireplumber pavucontrol pamixer playerctl dunst libnotify maim papirus-icon-theme brightnessctl bc jq xsettingsd webp-pixbuf-loader xcape arandr autorandr NetworkManager nm-tray wireless-regdb"
 
 echo "Syncing repositories..."
 sudo xbps-install -Suy || true
@@ -61,6 +61,25 @@ if ! command -v clipcatd >/dev/null 2>&1; then
     chmod +x "$HOME"/.local/bin/clipcat* 2>/dev/null || true
 fi
 
+# --- WiFi Driver Fix (Realtek RTL8822CE / rtw88) ---
+logo "Realtek RTL8822CE WiFi Driver Fix"
+echo "Applying stability tweaks for rtw88_8822ce (disabling MSI, ASPM, deep power save)..."
+sudo mkdir -p /etc/modprobe.d
+cat << 'RTW88' | sudo tee /etc/modprobe.d/rtw88.conf > /dev/null
+# Fix for Realtek RTL8822CE (rtw88 driver) - improves stability & prevents disconnects
+options rtw88_pci disable_msi=y disable_aspm=y
+options rtw88_core disable_lps_deep=y
+RTW88
+
+# --- NetworkManager: enable service, disable conflicting dhcpcd/wpa_supplicant ---
+logo "Setting up NetworkManager"
+echo "Disabling dhcpcd & wpa_supplicant runit services (NetworkManager manages them)..."
+sudo rm -f /var/service/dhcpcd /var/service/wpa_supplicant 2>/dev/null || true
+if [ ! -L /var/service/NetworkManager ]; then
+    sudo ln -sf /etc/sv/NetworkManager /var/service/NetworkManager
+    echo "NetworkManager service enabled."
+fi
+
 logo "Configuring Void Linux Services & Machine ID"
 echo "Generating D-Bus machine ID..."
 sudo dbus-uuidgen --ensure 2>/dev/null || true
@@ -81,8 +100,7 @@ if [ -d /etc/sv/elogind ] && [ ! -L /var/service/elogind ]; then
 fi
 
 logo "Setting up User Directories"
-mkdir -p "$HOME/Music" "$HOME/Downloads" "$HOME/Pictures" "$HOME/.local/bin"
-
+mkdir -p "$HOME/Music" "$HOME/Downloads" "$HOME/Pictures" "$HOME/.local/bin" 
 logo "Downloading & Linking dotfiles"
 repo_url="https://github.com/pablorere/dotfiles.git"
 repo_dir="$HOME/.dotfiles"
