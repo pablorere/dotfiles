@@ -83,12 +83,13 @@ fi
 pkill -x pipewire; pkill -f pipewire-pulse; pkill -f wireplumber; sleep 1
 pipewire &
 
+# Launch xcape so tapping Super opens the application launcher without breaking Super+key combinations
+pkill -x xcape 2>/dev/null
+xcape -e 'Super_L=Super_L|d;Super_R=Super_R|d'
+
 # Reload or launch sxhkd daemon
-if pidof -q sxhkd; then
-    pkill -USR1 -x sxhkd
-else
-    sxhkd -c "${HOME}"/.config/bspwm/config/sxhkdrc &
-fi
+pkill -x sxhkd 2>/dev/null
+sxhkd -c "${HOME}"/.config/bspwm/config/sxhkdrc &
 
 # Load current theme
 "${HOME}"/.config/bspwm/bin/Theme.sh

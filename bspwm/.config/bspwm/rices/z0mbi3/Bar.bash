@@ -30,7 +30,7 @@ generate_eww_workspaces() {
 generate_eww_workspaces
 
 for m in $(bspc query -M --names); do
-    eww -c "${HOME}/.config/bspwm/rices/${RICE}/bar" open bar --id "$m" --arg monitor="$m" --toggle
+    eww -c "${HOME}/.config/bspwm/rices/${RICE}/bar" open bar --id "$m" --screen "$m" --arg monitor="$m"
 done
 
 # Fix eww when entering fullscreen state

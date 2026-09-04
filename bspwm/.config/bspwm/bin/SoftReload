@@ -54,6 +54,11 @@ reloaded="${reloaded}• Gtk Colors\n"
 pkill -USR1 -x sxhkd 2>/dev/null &&
 reloaded="${reloaded}• SXHKD\n"
 
+# Reload xcape daemon
+pkill -x xcape 2>/dev/null
+xcape -e 'Super_L=Super_L|d;Super_R=Super_R|d' &&
+reloaded="${reloaded}• Xcape\n"
+
 # Reload EWW widgets
 if eww ping -c "$main_eww" >/dev/null; then
     eww reload -c "$main_eww" &&

@@ -246,5 +246,13 @@ super + n ; {1-9}
     bspc query -N -d {1-9} -n '.window' | xargs -I id -n 1 bspc node id -d focused
 
 # Launch SXHKD Web Editor
-super + F1
+alt + F2
 	~/.config/bspwm/bin/LaunchSxhkdEditor
+
+# Monitor Manager (ARandR GUI tool for display layout)
+super + F12
+    arandr
+
+# Auto-configure Connected Monitors & Workspaces
+super + alt + m
+    MonitorSetup

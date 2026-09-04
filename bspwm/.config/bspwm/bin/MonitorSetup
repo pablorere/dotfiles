@@ -159,3 +159,22 @@ case $NUM_MONITORS in
         echo "Warning: Configuration not supported for more than 4 monitors"
         ;;
 esac
+
+# Update wallpaper across all monitors
+[ -x "$HOME/.fehbg" ] && "$HOME/.fehbg"
+
+# Refresh bars for newly configured displays
+if pgrep -x polybar >/dev/null 2>&1; then
+    polybar-msg cmd restart >/dev/null 2>&1 || true
+elif pgrep -x eww >/dev/null 2>&1; then
+    read -r CURRENT_RICE < "$HOME/.config/bspwm/.rice"
+    bar_script="$HOME/.config/bspwm/rices/$CURRENT_RICE/Bar.bash"
+    if [ -f "$bar_script" ]; then
+        bash "$bar_script" >/dev/null 2>&1 &
+    fi
+fi
+
+# Send notification
+if command -v dunstify >/dev/null 2>&1; then
+    dunstify -u low -i display "Monitor Setup" "Configured $NUM_MONITORS monitor(s) successfully!" 2>/dev/null || true
+fi

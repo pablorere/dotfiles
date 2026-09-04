@@ -8,6 +8,9 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 # Load Xresources if they exist
 [ -f ~/.Xresources ] && xrdb -merge ~/.Xresources
 
+# Load xprofile (sets primary monitor, env vars, etc.)
+[ -f ~/.xprofile ] && . ~/.xprofile
+
 # Start sxhkd with explicit dotfiles configuration
 sxhkd -c "$HOME/.config/bspwm/config/sxhkdrc" &
 
