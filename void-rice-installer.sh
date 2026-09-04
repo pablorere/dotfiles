@@ -61,6 +61,31 @@ if ! command -v clipcatd >/dev/null 2>&1; then
     chmod +x "$HOME"/.local/bin/clipcat* 2>/dev/null || true
 fi
 
+# --- NVIDIA GPU Detection & Driver Installation ---
+if lspci -k 2>/dev/null | grep -iE 'vga|3d' | grep -qi 'nvidia'; then
+    logo "NVIDIA GPU Detected"
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "$repo_dir/install-nvidia.sh" ]; then
+        echo "Running install-nvidia.sh..."
+        sudo "$repo_dir/install-nvidia.sh"
+    elif [ -f "$SCRIPT_DIR/install-nvidia.sh" ]; then
+        echo "Running install-nvidia.sh from script directory..."
+        sudo "$SCRIPT_DIR/install-nvidia.sh"
+    else
+        echo "Installing void-repo-nonfree, kernel headers and proprietary NVIDIA drivers..."
+        sudo xbps-install -y void-repo-nonfree
+        sudo xbps-install -S
+        sudo xbps-install -y linux-headers nvidia
+        sudo mkdir -p /etc/modprobe.d
+        echo "options nvidia-drm modeset=1" | sudo tee /etc/modprobe.d/nvidia.conf >/dev/null
+        cat << 'NOUVEAU' | sudo tee /etc/modprobe.d/blacklist-nouveau.conf >/dev/null
+blacklist nouveau
+options nouveau modeset=0
+NOUVEAU
+        sudo xbps-reconfigure -fa
+    fi
+fi
+
 # --- WiFi Driver Fix (Realtek RTL8822CE / rtw88) ---
 logo "Realtek RTL8822CE WiFi Driver Fix"
 echo "Applying stability tweaks for rtw88_8822ce (disabling MSI, ASPM, deep power save)..."
@@ -148,7 +173,7 @@ logo "Stowing packages"
 for pkg_dir in */; do
     pkg=${pkg_dir%/} # Remove trailing slash
     
-    if [[ "$pkg" == .* || "$pkg" == "scratch" || "$pkg" == "__pycache__" || "$pkg" == "misc" ]]; then
+    if [[ "$pkg" == .* || "$pkg" == "scratch" || "$pkg" == "__pycache__" || "$pkg" == "misc" || "$pkg" == "ly" ]]; then
         continue
     fi
     
@@ -329,6 +354,52 @@ exit $EXIT_STATUS
 EOF
 chmod +x "$HOME/.local/bin/wal"
 
+echo "Setting up feh wrapper for automatic multi-monitor wallpaper support..."
+cat << 'EOF' > "$HOME/.local/bin/feh"
+#!/bin/bash
+# Multi-monitor wrapper for feh
+# Automatically duplicates wallpaper across all active monitors
+# if only one image file was provided to --bg-*
+
+REAL_FEH="/usr/bin/feh"
+
+is_bg=0
+bg_flag=""
+declare -a other_args
+declare -a file_args
+
+for arg in "$@"; do
+    case "$arg" in
+        --bg-fill|--bg-scale|--bg-center|--bg-max|--bg-tile)
+            is_bg=1
+            bg_flag="$arg"
+            ;;
+        -*)
+            other_args+=("$arg")
+            ;;
+        *)
+            file_args+=("$arg")
+            ;;
+    esac
+done
+
+if [[ $is_bg -eq 1 && ${#file_args[@]} -eq 1 ]]; then
+    mon_count=$(xrandr --listmonitors 2>/dev/null | awk '/^Monitors:/ {print $2}')
+    if [[ -z "$mon_count" || "$mon_count" -lt 1 ]]; then
+        mon_count=$(bspc query -M 2>/dev/null | wc -l)
+    fi
+    if [[ -n "$mon_count" && "$mon_count" -gt 1 ]]; then
+        wall="${file_args[0]}"
+        for ((i=1; i<mon_count; i++)); do
+            file_args+=("$wall")
+        done
+    fi
+fi
+
+exec "$REAL_FEH" ${bg_flag:+"$bg_flag"} "${other_args[@]}" "${file_args[@]}"
+EOF
+chmod +x "$HOME/.local/bin/feh"
+
 # Setup fzf-tab zsh plugin
 if [ ! -d "$HOME/.config/zsh/plugins/fzf-tab-git" ]; then
     echo "Cloning fzf-tab zsh plugin..."
@@ -346,9 +417,13 @@ echo "Ensuring execution permissions for bspwm scripts..."
 
 
 # Install Ly Display Manager
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$repo_dir/install-ly.sh" ]; then
     logo "Installing Ly Display Manager"
     sudo "$repo_dir/install-ly.sh"
+elif [ -f "$SCRIPT_DIR/install-ly.sh" ]; then
+    logo "Installing Ly Display Manager"
+    sudo "$SCRIPT_DIR/install-ly.sh"
 fi
 
 # Change shell
